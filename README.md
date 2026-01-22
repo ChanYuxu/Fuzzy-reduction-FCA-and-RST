@@ -77,7 +77,9 @@ The Łukasiewicz lattice satisfies the Law of Double Negation ($\neg \neg a = a$
 
 ### Fuzzy Value Precision
 The normalized values are mapped to a 5-level fuzzy scale:
+
 $$normalized = \frac{x - min}{max - min}$$
+
 $$rounded\_to\_025 = \frac{round(normalized \times 4)}{4}$$
 
 ### Execution Commands
