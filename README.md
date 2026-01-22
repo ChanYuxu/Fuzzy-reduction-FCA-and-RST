@@ -1,14 +1,14 @@
 # Fuzzy-reduction-FCA-and-RST
-The repository for the algorithm for fuzzy reduction FCA and RST
+Repository for algorithms implementing attribute reduction via Fuzzy Formal Concept Analysis (FCA) and Fuzzy Rough Set Theory (RST).
 
+---
 
 # UCI Wine Dataset - Reduct Testing
 
-## 数据集信息
+## Dataset Information
+The UCI Wine Dataset consists of 178 samples characterized by 13 chemical constituents (attributes) and 1 categorical label (representing 3 types of cultivars).
 
-UCI Wine Dataset 包含178个样本，13个化学成分属性和1个类别标签（3种葡萄酒类别）。
-
-### 属性列表：
+### Attribute List:
 1. alcohol
 2. malic_acid
 3. ash
@@ -22,91 +22,74 @@ UCI Wine Dataset 包含178个样本，13个化学成分属性和1个类别标签
 11. hue
 12. od280/od315_of_diluted_wines
 13. proline
-14. class (决策属性)
+14. class (Decision attribute)
 
-## 测试流程
+---
 
-### 1. 数据预处理
+## Testing Workflow
 
-脚本：`wine_reduct_simple.py`
+### 1. Data Preprocessing
+**Script:** `wine_reduct_simple.py`
 
-步骤：
-1. 从不同类别随机选取样本
-2. 对所有数值属性进行 Min-Max 归一化到 [0, 1]
-3. 将归一化值四舍五入到 0.25 精度（即 0.0, 0.25, 0.5, 0.75, 1.0）
-4. 移除 class 列，只保留数值属性用于约简测试
+1. **Sampling:** Randomly selects samples from different classes.
+2. **Normalization:** Performs Min-Max normalization on all numerical attributes to the range [0, 1].
+3. **Discretization:** Rounds normalized values to a precision of 0.25 (i.e., 0.0, 0.25, 0.5, 0.75, 1.0).
+4. **Cleaning:** Removes the `class` column, retaining only numerical attributes for reduction testing.
 
-### 2. 约简测试
+### 2. Reduction Testing
+Utilizes core functions from `fuzzy_fca_reduct.py`:
 
-使用 `fuzzy_fca_reduct.py` 中的函数：
+* `FuzzyFormalContext`: Creates a fuzzy formal context (for FCA).
+* `FuzzyRoughContext`: Creates a fuzzy rough context (for RST).
+* `is_fca_reduct()`: Validates if a specific attribute subset is an FCA reduct.
+* `is_rst_reduct()`: Validates if a specific attribute subset is an RST reduct.
 
-- `FuzzyFormalContext` - 创建模糊形式上下文（用于FCA）
-- `FuzzyRoughContext` - 创建模糊粗糙上下文（用于RST）
-- `is_fca_reduct()` - 判断子集是否是FCA约简
-- `is_rst_reduct()` - 判断子集是否是RST约简
+### 3. Methodology
+**Single Attribute Removal:**
+* Sequentially removes one attribute and checks if the remaining set $Y'$ maintains the reductive properties of the original context.
+* For each subset $Y'$:
+  * $X'$ = All objects
+  * $Y'$ = All attributes - {removed_attribute}
 
-### 3. 测试方法
+**Combination Attribute Removal:**
+* Tests the removal of attribute pairs.
+* Due to computational complexity, the number of combinations tested is limited.
 
-**测试单个属性移除**：
-- 逐个移除属性，测试剩余属性是否能保持原上下文的约简性质
-- 对于每个属性集 Y'：
-  - `X'` = 所有对象
-  - `Y'` = 所有属性 - {被移除属性}
+---
 
-**测试组合属性移除**：
-- 测试同时移除2个属性的情况
-- 由于计算复杂度，限制测试的组合数量
+## Theoretical Background & Expected Results
 
-## 预期结果
+According to **Theorem 4.7** in the source paper:
 
-### 使用 Gödel 剩余格
+### Case A: Gödel Residuated Lattice
+The Gödel lattice does **not** satisfy the Law of Double Negation ($\neg \neg 0.5 = 1 \neq 0.5$).
+* **Expectation:** FCA and RST reduction results may differ.
+* **Result:** Potential for **divergence** between the two theories.
 
-Gödel 格不满足双重否定律（¬¬0.5 = 1 ≠ 0.5），因此：
-- FCA 和 RST 的约简结果可能不同
-- 可能找到 **divergence（分歧）** 情况
+### Case B: Łukasiewicz Residuated Lattice
+The Łukasiewicz lattice satisfies the Law of Double Negation ($\neg \neg a = a$ for all $a \in [0, 1]$).
+* **Expectation:** FCA and RST reduction results should be consistent.
+* **Result:** No divergence should occur.
 
-### 使用 Łukasiewicz 剩余格
+---
 
-Łukasiewicz 格满足双重否定律（¬¬a = a 对所有 a∈[0,1]），因此：
-- FCA 和 RST 的约简结果应该一致
-- 不应出现分歧
+## Technical Details
 
-## 运行测试
+### Fuzzy Value Precision
+The normalized values are mapped to a 5-level fuzzy scale:
+$$normalized = \frac{x - min}{max - min}$$
+$$rounded\_to\_025 = \frac{round(normalized \times 4)}{4}$$
 
+### Execution Commands
 ```bash
-# 快速测试
+# Run the fast reduction test
 python wine_reduct_simple.py
 
-# 数据探索
+# Perform data exploration
 python explore_uci_wine.py
-```
 
-## 理论背景
 
-根据论文 Theorem 4.7：
-
-- **当剩余格满足双重否定律时**：
-  - FCA 约简和 RST 约简通过否定相互等价
-  - 两种理论给出一致的约简结果
-
-- **当剩余格不满足双重否定律时**（如 Gödel 格）：
-  - FCA 约简和 RST 约简可能不同
-  - 两种理论可能给出矛盾的结论
-
-## 模糊值精度
-
-测试中使用的模糊值精度：
-- **细粒度**: 0.0, 0.25, 0.5, 0.75, 1.0
-
-归一化公式：
-```
-normalized = (x - min) / (max - min)
-rounded_to_025 = round(normalized * 4) / 4
-```
-
-## 输出示例
-
-```
+# example
 ================================================================================
 UCI WINE DATASET - REDUCT TEST (FAST)
 ================================================================================
@@ -124,8 +107,8 @@ Testing attribute removal:
 --------------------------------------------------------------------------------
 Attribute                 | FCA Reduct | RST Reduct | Divergence
 --------------------------------------------------------------------------------
-alcohol                   |     NO     |    YES     |       YES
-malic_acid               |     NO     |     NO     |        NO
+alcohol                   |     NO     |     YES    |       YES
+malic_acid                |     NO     |     NO     |        NO
 ...
 
 SUMMARY
@@ -137,5 +120,3 @@ Divergences (FCA != RST): 3
 *** DIVERGENCE FOUND! ***
 This demonstrates that with Godel lattice (which fails
 double negation), FCA and RST can give different reduct results.
-```
-
